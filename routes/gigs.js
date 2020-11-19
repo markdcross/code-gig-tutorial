@@ -20,27 +20,57 @@ router.get('/add', (req, res) => res.render('add'));
 
 // Add a gig
 router.post('/add', (req, res) => {
-    const data = {
-        title: 'Simple Wordpress website',
-        technologies: 'Wordpress,php,html,css',
-        budget: '$3000',
-        description:
-            'The Death Star plans are not in the main computer. Where are those transmissions you intercepted? What have you done with those plans? We intercepted no transmissions. Aaah....This is a consular ship. Were on a diplomatic mission. If this is a consular ship...were is the Ambassador? ',
-        contact_email: 'user2@gmail.com',
-    };
+    let { title, technologies, budget, description, contact_email } = req.body;
+    let errors = [];
 
-    let { title, technologies, budget, description, contact_email } = data;
+    // Validate Fields
+    if (!title) {
+        errors.push({ text: 'Please add a title' });
+    }
 
-    // Insert into table
-    Gig.create({
-        title,
-        technologies,
-        description,
-        budget,
-        contact_email,
-    })
-        .then((gig) => res.redirect('/gigs'))
-        .catch((err) => console.log(err));
+    if (!technologies) {
+        errors.push({ text: 'Please add some technologies' });
+    }
+
+    if (!description) {
+        errors.push({ text: 'Please add a description' });
+    }
+
+    if (!contact_email) {
+        errors.push({ text: 'Please add a contact email' });
+    }
+
+    // Check for errors
+    if (errors.length > 0) {
+        res.render('add', {
+            errors,
+            title,
+            technologies,
+            budget,
+            description,
+            contact_email,
+        });
+    } else {
+        if (!budget) {
+            budget = 'Unknown';
+        } else {
+            budget = `$${budget}`;
+        }
+
+        // Make lowercase and remove space after comma
+        technologies = technologies.toLowerCase().replace(/, /g, ',');
+
+        // Insert into table
+        Gig.create({
+            title,
+            technologies,
+            description,
+            budget,
+            contact_email,
+        })
+            .then((gig) => res.redirect('/gigs'))
+            .catch((err) => console.log(err));
+    }
 });
 
 module.exports = router;
